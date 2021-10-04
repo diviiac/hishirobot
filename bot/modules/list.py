@@ -10,14 +10,14 @@ def list_drive(update, context):
     try:
         search = update.message.text.split(' ', maxsplit=1)[1]
         LOGGER.info(f"Searching: {search}")
-        reply = sendMessage('Searching... Please wait!', context.bot, update)
+        reply = sendMessage('S-Searching...Onii-Chan! 😣', context.bot, update)
         gdrive = GoogleDriveHelper()
-        msg, button = gdrive.drive_list(search)
+        msg, button = gdrive.search_recur(search)
 
         if button:
             editMessage(msg, reply, button)
         else:
-            editMessage(f'No result found for <i>{search}</i>', reply, button)
+            editMessage(f'No result found for <code>{search.replace(" -f", "")}</code>', reply, button)
 
     except IndexError:
         sendMessage('Send a search key along with command', context.bot, update)

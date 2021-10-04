@@ -31,7 +31,7 @@ def speedtest(update, context):
 
 
 def speed_convert(size):
-    """Hi human, you can't read bytes?"""
+    """Hi human, can't you read bytes?"""
     power = 2 ** 10
     zero = 0
     units = {0: "", 1: "Kb/s", 2: "MB/s", 3: "Gb/s", 4: "Tb/s"}
@@ -41,7 +41,7 @@ def speed_convert(size):
     return f"{round(size, 2)} {units[zero]}"
 
 
-SPEED_HANDLER = CommandHandler(BotCommands.SpeedCommand, speedtest, 
+SPEED_HANDLER = CommandHandler(BotCommands.SpeedCommand, speedtest,
                                                   filters=CustomFilters.owner_filter | CustomFilters.authorized_user, run_async=True)
 
 dispatcher.add_handler(SPEED_HANDLER)

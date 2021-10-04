@@ -42,6 +42,10 @@ from bot.helper.telegram_helper import button_build
 ariaDlManager = AriaDownloadHelper()
 ariaDlManager.start_listener()
 
+URI_REGEX = \
+    r"(?i)\b((?:ftp|https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|" \
+    "(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|" \
+    "[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))|magnet:\?xt=urn:btih:[\w!@#$&-?=%.()\\-`.+,/\"]*"
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, bot, update, pswd, isTar=False, extract=False, isZip=False, isQbit=False, isLeech=False):
@@ -249,13 +253,13 @@ class MirrorListener(listeners.MirrorListeners):
                 update_all_messages()
             return
         with download_dict_lock:
-            msg = f'<b>Name: </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size: </b>{size}'
+            msg = f'<b>Filename: </b><code>{download_dict[self.uid].name()}</code>\n<b>Size: </b><code>{size}</code>'
             if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
-                msg += '\n\n<b>Type: </b>Folder'
-                msg += f'\n<b>SubFolders: </b>{folders}'
-                msg += f'\n<b>Files: </b>{files}'
+                msg += '\n<b>Type: </b><code>Folder</code>'
+                msg += f'\n<b>SubFolders: </b><code>{folders}</code>'
+                msg += f'\n<b>Files: </b><code>{files}</code>'
             else:
-                msg += f'\n\n<b>Type: </b>{typ}'
+                msg += f'\n<b>Type: </b><code>{typ}</code>'
             buttons = button_build.ButtonMaker()
             if SHORTENER is not None and SHORTENER_API is not None:
                 surl = short_url(link)
@@ -375,6 +379,13 @@ def _mirror(bot, update, isTar=False, extract=False, isZip=False, isQbit=False, 
             if i is not None:
                 file = i
                 break
+        try:
+            reply_text = re.search(URI_REGEX, reply_to.text)
+            LOGGER.info(f"URL extracted: {reply_text[0]}")
+            link = reply_text[0]
+        except TypeError:
+            pass
+
         if (
             not bot_utils.is_url(link)
             and not bot_utils.is_magnet(link)

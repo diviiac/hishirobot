@@ -11,7 +11,7 @@ from hachoir.parser import createParser
 from hachoir.metadata import extractMetadata
 
 from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS
-from bot.helper.ext_utils.fs_utils import take_ss 
+from bot.helper.ext_utils.fs_utils import take_ss
 
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
@@ -105,7 +105,7 @@ class TgUploader:
                         if metadata.has("title"):
                             title = metadata.get("title")
                         if metadata.has("artist"):
-                            artist = metadata.get("artist") 
+                            artist = metadata.get("artist")
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,

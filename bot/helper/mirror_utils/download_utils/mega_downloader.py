@@ -185,7 +185,7 @@ class MegaDownloadHelper:
             msg3 = f'Failed, Tar/Unzip limit is {TAR_UNZIP_LIMIT}.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
             limit = TAR_UNZIP_LIMIT
         elif MEGA_LIMIT is not None:
-            msg3 = f'Failed, Mega limit is {MEGA_LIMIT}.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.' 
+            msg3 = f'Failed, Mega limit is {MEGA_LIMIT}.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
             limit = MEGA_LIMIT
         if limit is not None:
             size = api.getSize(node)

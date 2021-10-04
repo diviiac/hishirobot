@@ -71,7 +71,7 @@ class AriaDownloadHelper:
     def __onDownloadStopped(self, api, gid):
         sleep(4)
         dl = getDownloadByGid(gid)
-        if dl: 
+        if dl:
             dl.getListener().onDownloadError('Dead torrent!')
 
     @new_thread
@@ -82,7 +82,7 @@ class AriaDownloadHelper:
         download = aria2.get_download(gid)
         error = download.error_message
         LOGGER.info(f"Download Error: {error}")
-        if dl: 
+        if dl:
             dl.getListener().onDownloadError(error)
 
     def start_listener(self):

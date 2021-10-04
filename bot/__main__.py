@@ -10,14 +10,15 @@ from telegram import ParseMode
 from telegram.ext import CommandHandler
 from telegraph import Telegraph
 from wserver import start_server_async
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, telegraph_token
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, telegraph_token, rss_session
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import *
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from .helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper import button_build
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, delete, speedtest, count, leech_settings
+from .modules.rssfeeds import rss_init
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, torrent_search, delete, speedtest, count, rssfeeds, leech_settings, reboot
 
 
 def stats(update, context):
@@ -45,8 +46,8 @@ def stats(update, context):
 
 def start(update, context):
     buttons = button_build.ButtonMaker()
-    buttons.buildbutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.buildbutton("Channel", "https://t.me/mirrorLeechTelegramBot")
+    buttons.buildbutton("Repo", "https://github.com/hyPnOtICDo0g/hishirobot")
+    buttons.buildbutton("Read ReLIFE", "https://myanimelist.net/manga/78523/ReLIFE")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
@@ -56,7 +57,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
         sendMarkup(start_string, context.bot, update, reply_markup)
     else:
         sendMarkup(
-            'Not a Authorized user',
+            'Oops! not an Authorized user.',
             context.bot,
             update,
             reply_markup,
@@ -136,13 +137,13 @@ help_string_telegraph = f'''<br>
 <br><br>
 <b>/{BotCommands.ZipWatchCommand}</b> [youtube-dl supported link]: Mirror through youtube-dl and zip before uploading
 <br><br>
-<b>/{BotCommands.LeechWatchCommand}</b> [youtube-dl supported link]: Leech through youtube-dl 
+<b>/{BotCommands.LeechWatchCommand}</b> [youtube-dl supported link]: Leech through youtube-dl
 <br><br>
-<b>/{BotCommands.LeechTarWatchCommand}</b> [youtube-dl supported link]: Leech through youtube-dl and tar before uploading 
+<b>/{BotCommands.LeechTarWatchCommand}</b> [youtube-dl supported link]: Leech through youtube-dl and tar before uploading
 <br><br>
-<b>/{BotCommands.LeechZipWatchCommand}</b> [youtube-dl supported link]: Leech through youtube-dl and zip before uploading 
+<b>/{BotCommands.LeechZipWatchCommand}</b> [youtube-dl supported link]: Leech through youtube-dl and zip before uploading
 <br><br>
-<b>/{BotCommands.LeechSetCommand}</b>: Leech Settings 
+<b>/{BotCommands.LeechSetCommand}</b>: Leech Settings
 <br><br>
 <b>/{BotCommands.SetThumbCommand}</b>: Reply photo to set it as Thumbnail
 <br><br>
@@ -157,18 +158,18 @@ help_string_telegraph = f'''<br>
 <b>/{BotCommands.StatsCommand}</b>: Show Stats of the machine the bot is hosted on
 '''
 help = Telegraph(access_token=telegraph_token).create_page(
-        title='Mirrorbot Help',
-        author_name='Mirrorbot',
-        author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
+        title='Hishirobot Help',
+        author_name='Hishirobot',
+        author_url='https://github.com/hyPnOtICDo0g/hishirobot',
         html_content=help_string_telegraph,
     )["path"]
 
 help_string = f'''
-/{BotCommands.PingCommand}: Check how long it takes to Ping the Bot
-
 /{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Can only be invoked by Owner & Sudo of the bot)
 
 /{BotCommands.UnAuthorizeCommand}: Unauthorize a chat or a user to use the bot (Can only be invoked by Owner & Sudo of the bot)
+
+/{BotCommands.PingCommand}: Check how long it takes to Ping the Bot
 
 /{BotCommands.AuthorizedUsersCommand}: Show authorized users (Only Owner & Sudo)
 
@@ -178,13 +179,21 @@ help_string = f'''
 
 /{BotCommands.RestartCommand}: Restart the bot
 
-/{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports
+/{BotCommands.RebootCommand}: Restart the bot's dyno (Heroku only)
+
+/{BotCommands.ShutDownCommand}: Turn off the bot (Heroku only)
+
+/{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports.
 
 /{BotCommands.SpeedCommand}: Check Internet Speed of the Host
 
-/{BotCommands.ShellCommand}: Run commands in Shell (Only Owner)
+/{BotCommands.ShellCommand}: Run commands in Shell (Only Owner & Sudo)
 
 /{BotCommands.ExecHelpCommand}: Get help for Executor module (Only Owner)
+
+/{BotCommands.RssHelpCommand}:  Get help for RSS feeds module
+
+/{BotCommands.TsHelpCommand}: Get help for Torrent search module
 '''
 
 def bot_help(update, context):
@@ -193,33 +202,30 @@ def bot_help(update, context):
     reply_markup = InlineKeyboardMarkup(button.build_menu(1))
     sendMarkup(help_string, context.bot, update, reply_markup)
 
-'''
+
 botcmds = [
         (f'{BotCommands.HelpCommand}','Get Detailed Help'),
         (f'{BotCommands.MirrorCommand}', 'Start Mirroring'),
-        (f'{BotCommands.TarMirrorCommand}','Start mirroring and upload as .tar'),
-        (f'{BotCommands.ZipMirrorCommand}','Start mirroring and upload as .zip'),
         (f'{BotCommands.UnzipMirrorCommand}','Extract files'),
+        (f'{BotCommands.ZipMirrorCommand}','Start mirroring and upload as .zip'),
         (f'{BotCommands.QbMirrorCommand}','Start Mirroring using qBittorrent'),
-        (f'{BotCommands.QbTarMirrorCommand}','Start mirroring and upload as .tar using qb'),
-        (f'{BotCommands.QbZipMirrorCommand}','Start mirroring and upload as .zip using qb'),
-        (f'{BotCommands.QbUnzipMirrorCommand}','Extract files using qBitorrent'),
         (f'{BotCommands.CloneCommand}','Copy file/folder to Drive'),
         (f'{BotCommands.CountCommand}','Count file/folder of Drive link'),
         (f'{BotCommands.DeleteCommand}','Delete file from Drive'),
-        (f'{BotCommands.WatchCommand}','Mirror Youtube-dl support link'),
-        (f'{BotCommands.TarWatchCommand}','Mirror Youtube playlist link as .tar'),
-        (f'{BotCommands.ZipWatchCommand}','Mirror Youtube playlist link as .zip'),
         (f'{BotCommands.CancelMirror}','Cancel a task'),
         (f'{BotCommands.CancelAllCommand}','Cancel all tasks'),
-        (f'{BotCommands.ListCommand}','Searches files in Drive'),
+        (f'{BotCommands.ListCommand}','Recursively searches files/folders in Drive'),
         (f'{BotCommands.StatusCommand}','Get Mirror Status message'),
         (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
-        (f'{BotCommands.PingCommand}','Ping the Bot'),
         (f'{BotCommands.RestartCommand}','Restart the bot [owner/sudo only]'),
-        (f'{BotCommands.LogCommand}','Get the Bot Log [owner/sudo only]')
+        (f'{BotCommands.LogCommand}','Get the Bot Log [owner/sudo only]'),
     ]
-'''
+
+def bot_help(update, context):
+    button = button_build.ButtonMaker()
+    button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
+    reply_markup = InlineKeyboardMarkup(button.build_menu(1))
+    sendMarkup(help_string, context.bot, update, reply_markup)
 
 def main():
     fs_utils.start_cleanup()
@@ -231,16 +237,8 @@ def main():
             chat_id, msg_id = map(int, f)
         bot.edit_message_text("Restarted successfully!", chat_id, msg_id)
         os.remove(".restartmsg")
-    elif OWNER_ID:
-        try:
-            text = "<b>Bot Restarted!</b>"
-            bot.sendMessage(chat_id=OWNER_ID, text=text, parse_mode=ParseMode.HTML)
-            if AUTHORIZED_CHATS:
-                for i in AUTHORIZED_CHATS:
-                    bot.sendMessage(chat_id=i, text=text, parse_mode=ParseMode.HTML)
-        except Exception as e:
-            LOGGER.warning(e)
-    # bot.set_my_commands(botcmds)
+
+    bot.set_my_commands(botcmds)
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
@@ -260,6 +258,10 @@ def main():
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)
+    rss_init()
+    if rss_session is not None:
+        rss_session.start()
+        LOGGER.info("Using SESSION_STRING for RSS feeds.")
 
 app.start()
 main()

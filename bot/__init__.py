@@ -191,7 +191,57 @@ LOGGER.info("Generating TELEGRAPH_TOKEN using '" + sname + "' name")
 telegraph = Telegraph()
 telegraph.create_account(short_name=sname)
 telegraph_token = telegraph.get_access_token()
+telegra_ph = Telegraph(access_token=telegraph_token)
 
+try:
+    CHAT_ID = getConfig('CHAT_ID')
+    DELAY = int(getConfig('DELAY'))
+    SESSION_STRING = str(getConfig('SESSION_STRING'))
+    CUSTOM_MESSAGES = getConfig('CUSTOM_MESSAGES')
+except:
+    pass
+
+rss_session = None
+if SESSION_STRING is not None and SESSION_STRING != "":
+    rss_session = Client(SESSION_STRING, api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH)
+
+DRIVE_NAME = []
+DRIVE_ID = []
+SEARCH_INDEXES = []
+
+if os.path.exists('drive_folder'):
+    with open('drive_folder', 'r+') as f:
+        lines = f.readlines()
+        for line in lines:
+            temp = line.strip().split()
+            DRIVE_NAME.append(temp[0].replace("_", " "))
+            DRIVE_ID.append(temp[1])
+            try:
+                SEARCH_INDEXES.append(temp[2])
+            except IndexError as e:
+                SEARCH_INDEXES.append(None)
+if DRIVE_ID :
+    pass
+else :
+    LOGGER.error("The README.md file there to be read! Exiting now!")
+    exit(1)
+
+try:
+    TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
+    if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097152000:
+        raise KeyError
+    else:
+        TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
+except KeyError:
+    TG_SPLIT_SIZE = 2097152000
+try:
+    STATUS_LIMIT = getConfig('STATUS_LIMIT')
+    if len(STATUS_LIMIT) == 0:
+        raise KeyError
+    else:
+        STATUS_LIMIT = int(STATUS_LIMIT)
+except KeyError:
+    STATUS_LIMIT = None
 try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
     if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097152000:
@@ -328,6 +378,15 @@ try:
     IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
 except KeyError:
     IGNORE_PENDING_REQUESTS = False
+try:
+    HEROKU_API_KEY = getConfig('HEROKU_API_KEY')
+    HEROKU_APP_NAME = getConfig('HEROKU_APP_NAME')
+    if len(HEROKU_API_KEY) == 0 or len(HEROKU_APP_NAME) == 0:
+        HEROKU_API_KEY = None
+        HEROKU_APP_NAME = None
+except KeyError:
+    HEROKU_API_KEY = None
+    HEROKU_APP_NAME = None
 try:
     BASE_URL = getConfig('BASE_URL_OF_BOT')
     if len(BASE_URL) == 0:

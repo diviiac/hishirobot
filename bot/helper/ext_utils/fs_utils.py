@@ -178,7 +178,7 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1):
         while start_time < total_duration or i <= parts:
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = os.path.join(dirpath, parted_name)
-            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", 
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
                             path, "-ss", str(start_time), "-fs", str(split_size),
                             "-strict", "-2", "-c", "copy", out_path])
             out_size = get_path_size(out_path)

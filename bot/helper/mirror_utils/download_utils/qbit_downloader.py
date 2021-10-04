@@ -172,7 +172,7 @@ class QbitTorrent:
                                 sendMarkup("Here are the search results:", self.listener.bot, self.listener.update, button)
                                 self.client.torrents_delete(torrent_hashes=self.ext_hash)
                                 self.client.auth_log_out()
-                                self.updater.cancel()  
+                                self.updater.cancel()
                                 return
                     limit = None
                     if TAR_UNZIP_LIMIT is not None and (self.listener.isTar or self.listener.extract):
@@ -191,7 +191,7 @@ class QbitTorrent:
                             self.listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
                             self.client.torrents_delete(torrent_hashes=self.ext_hash)
                             self.client.auth_log_out()
-                            self.updater.cancel()     
+                            self.updater.cancel()
                     self.checked = True
             elif tor_info.state == "stalledDL":
                 if time.time() - self.stalled_time >= 999999999: # timeout after downloading metadata
