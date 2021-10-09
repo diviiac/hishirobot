@@ -33,7 +33,6 @@ class _BotCommands:
         self.ShellCommand = 'sh'
         self.ExecHelpCommand = 'exechelp'
         self.RssHelpCommand = 'rsshelp'
-        self.TsHelpCommand = 'tshelp'
         self.LeechSetCommand = 'leechset'
         self.SetThumbCommand = 'setthumb'
         self.LeechCommand = 'leech'

@@ -183,8 +183,6 @@ help_string = f'''
 /{BotCommands.ExecHelpCommand}: Get help for Executor module (Only Owner)
 
 /{BotCommands.RssHelpCommand}:  Get help for RSS feeds module
-
-/{BotCommands.TsHelpCommand}: Get help for Torrent search module
 '''
 
 def bot_help(update, context):
